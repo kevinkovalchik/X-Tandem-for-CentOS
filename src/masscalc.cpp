@@ -1,3 +1,11 @@
+/*
+ Copyright (C) 2003 Ronald C Beavis, all rights reserved
+ X! tandem 
+ This software is a component of the X! proteomics software
+ development project
+
+Use of this software governed by the Artistic license, as reproduced here:
+
 The Artistic License for all X! software, binaries and documentation
 
 Preamble
@@ -10,28 +18,28 @@ make reasonable modifications.
 
 Definitions
 "Package" refers to the collection of files distributed by the Copyright 
-  Holder, and derivatives of that collection of files created through 
-  textual modification. 
+	Holder, and derivatives of that collection of files created through 
+	textual modification. 
 
 "Standard Version" refers to such a Package if it has not been modified, 
-  or has been modified in accordance with the wishes of the Copyright 
-  Holder as specified below. 
+	or has been modified in accordance with the wishes of the Copyright 
+	Holder as specified below. 
 
 "Copyright Holder" is whoever is named in the copyright or copyrights 
-  for the package. 
+	for the package. 
 
 "You" is you, if you're thinking about copying or distributing this Package. 
 
 "Reasonable copying fee" is whatever you can justify on the basis of 
-  media cost, duplication charges, time of people involved, and so on. 
-  (You will not be required to justify it to the Copyright Holder, but 
-  only to the computing community at large as a market that must bear 
-  the fee.) 
+	media cost, duplication charges, time of people involved, and so on. 
+	(You will not be required to justify it to the Copyright Holder, but 
+	only to the computing community at large as a market that must bear 
+	the fee.) 
 
 "Freely Available" means that no fee is charged for the item itself, 
-  though there may be fees involved in handling the item. It also means 
-  that recipients of the item may redistribute it under the same
-  conditions they received it. 
+	though there may be fees involved in handling the item. It also means 
+	that recipients of the item may redistribute it under the same
+	conditions they received it. 
 
 1. You may make and give away verbatim copies of the source form of the 
 Standard Version of this Package without restriction, provided that 
@@ -48,30 +56,30 @@ that you insert a prominent notice in each changed file stating how and
 when you changed that file, and provided that you do at least ONE of the 
 following: 
 
-  a. place your modifications in the Public Domain or otherwise make them 
-     Freely Available, such as by posting said modifications to Usenet 
-     or an equivalent medium, or placing the modifications on a major 
-     archive site such as uunet.uu.net, or by allowing the Copyright Holder 
-     to include your modifications in the Standard Version of the Package. 
-  b. use the modified Package only within your corporation or organization. 
-  c. rename any non-standard executables so the names do not conflict 
-     with standard executables, which must also be provided, and provide 
-     a separate manual page for each non-standard executable that clearly 
-     documents how it differs from the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	place your modifications in the Public Domain or otherwise make them 
+	Freely Available, such as by posting said modifications to Usenet 
+	or an equivalent medium, or placing the modifications on a major 
+	archive site such as uunet.uu.net, or by allowing the Copyright Holder 
+	to include your modifications in the Standard Version of the Package. 
+b.	use the modified Package only within your corporation or organization. 
+c.	rename any non-standard executables so the names do not conflict 
+	with standard executables, which must also be provided, and provide 
+	a separate manual page for each non-standard executable that clearly 
+	documents how it differs from the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 4. You may distribute the programs of this Package in object code or 
 executable form, provided that you do at least ONE of the following: 
 
-  a. distribute a Standard Version of the executables and library files, 
-     together with instructions (in the manual page or equivalent) on 
-     where to get the Standard Version. 
-  b. accompany the distribution with the machine-readable source of the 
-     Package with your modifications. 
-  c. give non-standard executables non-standard names, and clearly 
-     document the differences in manual pages (or equivalent), together 
-     with instructions on where to get the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	distribute a Standard Version of the executables and library files, 
+	together with instructions (in the manual page or equivalent) on 
+	where to get the Standard Version. 
+b.	accompany the distribution with the machine-readable source of the 
+	Package with your modifications. 
+c.	give non-standard executables non-standard names, and clearly 
+	document the differences in manual pages (or equivalent), together 
+	with instructions on where to get the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 5. You may charge a reasonable copying fee for any distribution of 
 this Package. You may charge any fee you choose for support of 
@@ -118,4 +126,84 @@ WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE. 
 
 The End 
+*/
 
+// File version: 2005-06-01
+
+#include "stdafx.h"
+#include "masscalc.h"
+
+/*
+ * Mass calculator class
+ *     Calculates molecular masses based on atomic masses.
+ *     Atomic masses come from http://www.unimod.org/unimod_help.html.
+ */
+masscalc::masscalc(massType _t)
+{
+	m_massType = _t;
+	addMass("H", 1.007825035, 1.00794);
+	addMass("O", 15.99491463, 15.9994);
+	addMass("N", 14.003074, 14.0067);
+	addMass("Se", 79.916520, 78.96);
+	addMass("C", 12.0, 12.0107);
+	addMass("S", 31.9720707, 32.065);
+	addMass("P", 30.973762, 30.973761);
+}
+
+double masscalc::calcMass(const char* _m)
+{
+	double totalMass = 0.0;
+
+	const char* pchAtom = _m;
+	const char* pchCount = pchAtom;
+
+	string atom;
+	int count;
+
+	while (*pchCount != '\0')
+	{
+		// Advance past atom name
+		pchCount++;
+		while (isalpha(*pchCount) && !isupper(*pchCount))
+			pchCount++;
+
+		// Get count, 1 if not present
+		count = 1;
+		if (isdigit(*pchCount))
+			count = atoi(pchCount);
+
+		// Add atomic mass * count
+		atom.assign(pchAtom, pchCount - pchAtom);
+		totalMass += getMass(atom.data()) * count;
+
+		// Advance past count, if there is one
+		while (*pchCount != '\0' && !isalpha(*pchCount))
+			pchCount++;
+
+		pchAtom = pchCount;
+	}
+
+	return totalMass;
+}
+
+double masscalc::getMass(const char* _m)
+{
+		map<string, massPair>::iterator it = m_masses.find(_m);
+		if (it == m_masses.end())
+			return 0.0;
+
+		if (m_massType == monoisotopic)
+			return it->second.monoisotopic;
+
+		return it->second.average;
+}
+
+void masscalc::addMass(const char* _m, double _mono, double _ave)
+{
+	string atom = _m;
+	massPair masses;
+	masses.monoisotopic = _mono;
+	masses.average = _ave;
+
+	m_masses.insert(make_pair(atom, masses));
+}

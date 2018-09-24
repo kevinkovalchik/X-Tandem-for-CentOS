@@ -1,3 +1,11 @@
+/*
+ Copyright (C) 2003 Ronald C Beavis, all rights reserved
+ X! tandem 
+ This software is a component of the X! proteomics software
+ development project
+
+Use of this software governed by the Artistic license, as reproduced here:
+
 The Artistic License for all X! software, binaries and documentation
 
 Preamble
@@ -10,28 +18,28 @@ make reasonable modifications.
 
 Definitions
 "Package" refers to the collection of files distributed by the Copyright 
-  Holder, and derivatives of that collection of files created through 
-  textual modification. 
+	Holder, and derivatives of that collection of files created through 
+	textual modification. 
 
 "Standard Version" refers to such a Package if it has not been modified, 
-  or has been modified in accordance with the wishes of the Copyright 
-  Holder as specified below. 
+	or has been modified in accordance with the wishes of the Copyright 
+	Holder as specified below. 
 
 "Copyright Holder" is whoever is named in the copyright or copyrights 
-  for the package. 
+	for the package. 
 
 "You" is you, if you're thinking about copying or distributing this Package. 
 
 "Reasonable copying fee" is whatever you can justify on the basis of 
-  media cost, duplication charges, time of people involved, and so on. 
-  (You will not be required to justify it to the Copyright Holder, but 
-  only to the computing community at large as a market that must bear 
-  the fee.) 
+	media cost, duplication charges, time of people involved, and so on. 
+	(You will not be required to justify it to the Copyright Holder, but 
+	only to the computing community at large as a market that must bear 
+	the fee.) 
 
 "Freely Available" means that no fee is charged for the item itself, 
-  though there may be fees involved in handling the item. It also means 
-  that recipients of the item may redistribute it under the same
-  conditions they received it. 
+	though there may be fees involved in handling the item. It also means 
+	that recipients of the item may redistribute it under the same
+	conditions they received it. 
 
 1. You may make and give away verbatim copies of the source form of the 
 Standard Version of this Package without restriction, provided that 
@@ -48,30 +56,30 @@ that you insert a prominent notice in each changed file stating how and
 when you changed that file, and provided that you do at least ONE of the 
 following: 
 
-  a. place your modifications in the Public Domain or otherwise make them 
-     Freely Available, such as by posting said modifications to Usenet 
-     or an equivalent medium, or placing the modifications on a major 
-     archive site such as uunet.uu.net, or by allowing the Copyright Holder 
-     to include your modifications in the Standard Version of the Package. 
-  b. use the modified Package only within your corporation or organization. 
-  c. rename any non-standard executables so the names do not conflict 
-     with standard executables, which must also be provided, and provide 
-     a separate manual page for each non-standard executable that clearly 
-     documents how it differs from the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	place your modifications in the Public Domain or otherwise make them 
+	Freely Available, such as by posting said modifications to Usenet 
+	or an equivalent medium, or placing the modifications on a major 
+	archive site such as uunet.uu.net, or by allowing the Copyright Holder 
+	to include your modifications in the Standard Version of the Package. 
+b.	use the modified Package only within your corporation or organization. 
+c.	rename any non-standard executables so the names do not conflict 
+	with standard executables, which must also be provided, and provide 
+	a separate manual page for each non-standard executable that clearly 
+	documents how it differs from the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 4. You may distribute the programs of this Package in object code or 
 executable form, provided that you do at least ONE of the following: 
 
-  a. distribute a Standard Version of the executables and library files, 
-     together with instructions (in the manual page or equivalent) on 
-     where to get the Standard Version. 
-  b. accompany the distribution with the machine-readable source of the 
-     Package with your modifications. 
-  c. give non-standard executables non-standard names, and clearly 
-     document the differences in manual pages (or equivalent), together 
-     with instructions on where to get the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	distribute a Standard Version of the executables and library files, 
+	together with instructions (in the manual page or equivalent) on 
+	where to get the Standard Version. 
+b.	accompany the distribution with the machine-readable source of the 
+	Package with your modifications. 
+c.	give non-standard executables non-standard names, and clearly 
+	document the differences in manual pages (or equivalent), together 
+	with instructions on where to get the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 5. You may charge a reasonable copying fee for any distribution of 
 this Package. You may charge any fee you choose for support of 
@@ -118,4 +126,79 @@ WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE. 
 
 The End 
+*/
 
+#ifndef MSEQUENCE_H
+#define MSEQUENCE_H
+
+// File version: 2003-07-01
+
+/*
+ * msequence objects store information about a protein sequence. the sequence and description
+ * are loaded from a list file and information about its scoring against mass spectra is
+ * stored in constants and a list of domains (peptides) that have been identified.
+ * NOTE: msequence.h has no corresponding .cpp file
+ */
+
+#include "mdomains.h"
+
+class msequence 
+{
+public:
+	msequence(void)	{
+		m_tUid = 0;
+		m_fScore = 0.0;
+		m_fHyper = 0.0;
+		m_dExpect = 1000.0;
+		m_vDomains.clear();
+		m_mapMods.clear();
+		m_siPath = -1;
+		m_strDes = " ";
+		m_bForward = true;
+		m_fIntensity = 1.0;
+		m_iRound = 1000;
+	}
+	virtual ~msequence(void) { 
+	}
+
+	int m_iRound; // the identification round that generated this sequence
+	bool m_bForward;
+	size_t m_tUid; // an identification number
+	float m_fScore; // the convolution score for the protein
+	float m_fHyper; // the hyper score for the protein
+	double m_dExpect; // the expectation value for the protein
+	float m_fIntensity;
+	string m_strSeq; // the sequence of the protein in single-letter code
+	string m_strDes; // a description of the protein
+	short int m_siPath; // the path name for the file that contained this sequence
+
+	vector<mdomain>	m_vDomains; // a vector of identified domains
+	SMap m_mapMods;  // a hash map containing fixed modification information
+	/*
+ * a siple copy operator, using the = operator
+ */
+	msequence& operator=(const msequence &rhs)	{
+		m_iRound = rhs.m_iRound;
+		m_bForward = rhs.m_bForward;
+		m_strSeq = rhs.m_strSeq;
+		m_strDes = rhs.m_strDes;
+		m_siPath = rhs.m_siPath;
+		m_tUid = rhs.m_tUid;
+		m_fScore = rhs.m_fScore;
+		m_fHyper = rhs.m_fHyper;
+		m_fIntensity = rhs.m_fIntensity;
+		m_dExpect = rhs.m_dExpect;
+		m_vDomains.clear();
+		size_t a = 0;
+		while(a < rhs.m_vDomains.size())	{
+			m_vDomains.push_back(rhs.m_vDomains[a]);
+			a++;
+		}
+		m_mapMods.clear();
+		if(rhs.m_mapMods.size() > 0)	{
+			m_mapMods = rhs.m_mapMods;
+		}
+		return *this;
+	}
+};
+#endif

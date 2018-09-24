@@ -1,3 +1,11 @@
+/*
+ Copyright (C) 2003 Ronald C Beavis, all rights reserved
+ X! tandem 
+ This software is a component of the X! proteomics software
+ development project
+
+Use of this software governed by the Artistic license, as reproduced here:
+
 The Artistic License for all X! software, binaries and documentation
 
 Preamble
@@ -10,28 +18,28 @@ make reasonable modifications.
 
 Definitions
 "Package" refers to the collection of files distributed by the Copyright 
-  Holder, and derivatives of that collection of files created through 
-  textual modification. 
+	Holder, and derivatives of that collection of files created through 
+	textual modification. 
 
 "Standard Version" refers to such a Package if it has not been modified, 
-  or has been modified in accordance with the wishes of the Copyright 
-  Holder as specified below. 
+	or has been modified in accordance with the wishes of the Copyright 
+	Holder as specified below. 
 
 "Copyright Holder" is whoever is named in the copyright or copyrights 
-  for the package. 
+	for the package. 
 
 "You" is you, if you're thinking about copying or distributing this Package. 
 
 "Reasonable copying fee" is whatever you can justify on the basis of 
-  media cost, duplication charges, time of people involved, and so on. 
-  (You will not be required to justify it to the Copyright Holder, but 
-  only to the computing community at large as a market that must bear 
-  the fee.) 
+	media cost, duplication charges, time of people involved, and so on. 
+	(You will not be required to justify it to the Copyright Holder, but 
+	only to the computing community at large as a market that must bear 
+	the fee.) 
 
 "Freely Available" means that no fee is charged for the item itself, 
-  though there may be fees involved in handling the item. It also means 
-  that recipients of the item may redistribute it under the same
-  conditions they received it. 
+	though there may be fees involved in handling the item. It also means 
+	that recipients of the item may redistribute it under the same
+	conditions they received it. 
 
 1. You may make and give away verbatim copies of the source form of the 
 Standard Version of this Package without restriction, provided that 
@@ -48,30 +56,30 @@ that you insert a prominent notice in each changed file stating how and
 when you changed that file, and provided that you do at least ONE of the 
 following: 
 
-  a. place your modifications in the Public Domain or otherwise make them 
-     Freely Available, such as by posting said modifications to Usenet 
-     or an equivalent medium, or placing the modifications on a major 
-     archive site such as uunet.uu.net, or by allowing the Copyright Holder 
-     to include your modifications in the Standard Version of the Package. 
-  b. use the modified Package only within your corporation or organization. 
-  c. rename any non-standard executables so the names do not conflict 
-     with standard executables, which must also be provided, and provide 
-     a separate manual page for each non-standard executable that clearly 
-     documents how it differs from the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	place your modifications in the Public Domain or otherwise make them 
+	Freely Available, such as by posting said modifications to Usenet 
+	or an equivalent medium, or placing the modifications on a major 
+	archive site such as uunet.uu.net, or by allowing the Copyright Holder 
+	to include your modifications in the Standard Version of the Package. 
+b.	use the modified Package only within your corporation or organization. 
+c.	rename any non-standard executables so the names do not conflict 
+	with standard executables, which must also be provided, and provide 
+	a separate manual page for each non-standard executable that clearly 
+	documents how it differs from the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 4. You may distribute the programs of this Package in object code or 
 executable form, provided that you do at least ONE of the following: 
 
-  a. distribute a Standard Version of the executables and library files, 
-     together with instructions (in the manual page or equivalent) on 
-     where to get the Standard Version. 
-  b. accompany the distribution with the machine-readable source of the 
-     Package with your modifications. 
-  c. give non-standard executables non-standard names, and clearly 
-     document the differences in manual pages (or equivalent), together 
-     with instructions on where to get the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	distribute a Standard Version of the executables and library files, 
+	together with instructions (in the manual page or equivalent) on 
+	where to get the Standard Version. 
+b.	accompany the distribution with the machine-readable source of the 
+	Package with your modifications. 
+c.	give non-standard executables non-standard names, and clearly 
+	document the differences in manual pages (or equivalent), together 
+	with instructions on where to get the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 5. You may charge a reasonable copying fee for any distribution of 
 this Package. You may charge any fee you choose for support of 
@@ -118,4 +126,80 @@ WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE. 
 
 The End 
+*/
 
+// File version: 2003-07-01
+// File version: 2005-07-29 - use expat to parse the input xml file (SAXTandemInputHandler)
+
+/*
+ * XmlParameter stores a string-to-string map that corresponds to note nodes in the input
+ * file that have the type="input" value. An input file is loaded, the appropriate nodes
+ * recorded and the map accessed through get and set functions. The map is single values, so
+ * the previous value associated with a key string are overwriten by subsequent calls to
+ * the set method. The use of keys in a map is recorded.
+ */
+
+#include "stdafx.h"
+#include "xmlparameter.h"
+#include "saxtandeminputhandler.h"
+
+XmlParameter::XmlParameter(void)
+{
+}
+
+XmlParameter::~XmlParameter(void)
+{
+}
+
+/*
+ * get returns the value associated with a key string. It also records whether
+ * a particular key has been accessed at least once
+ */
+bool XmlParameter::get(string &_k,string &_v)
+{
+	if(m_mapParam.find(_k) != m_mapParam.end())	{
+		_v = m_mapParam[_k];
+		m_mapUsed[_k] = true;
+		return true;
+	}
+	_v.erase(_v.begin(),_v.end());
+	return false;
+}
+/*
+ * getpath is used to retrieve the protected name of the input path
+ */
+bool XmlParameter::getpath(string &_p)
+{
+	_p = m_strXmlPath;
+	if(_p.size() == 0)
+		return false;
+	return true;
+}
+/*
+ * load sets the input path and retrieves the input note nodes
+ */
+bool XmlParameter::load(string &_p)
+{
+/*
+ * set the input path
+ */
+	m_strXmlPath = _p;
+
+	SAXTandemInputHandler tandem_input(m_strXmlPath,m_mapParam);
+	if(tandem_input.load()){
+		return true;
+	}
+	return false;
+
+}
+/*
+ * set associates a key string with a value string. The previous value associated with the
+ * key is discarded.
+ */
+bool XmlParameter::set(string &_k,string &_v)
+{
+	if(_k.size() == 0)
+		return false;
+	m_mapParam[_k] = _v;
+	return true;
+}

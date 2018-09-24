@@ -1,3 +1,11 @@
+/*
+ Copyright (C) 2006 Ronald C Beavis, all rights reserved
+ X! tandem 
+ This software is a component of the X! proteomics software
+ development project
+
+Use of this software governed by the Artistic license, as reproduced here:
+
 The Artistic License for all X! software, binaries and documentation
 
 Preamble
@@ -10,28 +18,28 @@ make reasonable modifications.
 
 Definitions
 "Package" refers to the collection of files distributed by the Copyright 
-  Holder, and derivatives of that collection of files created through 
-  textual modification. 
+	Holder, and derivatives of that collection of files created through 
+	textual modification. 
 
 "Standard Version" refers to such a Package if it has not been modified, 
-  or has been modified in accordance with the wishes of the Copyright 
-  Holder as specified below. 
+	or has been modified in accordance with the wishes of the Copyright 
+	Holder as specified below. 
 
 "Copyright Holder" is whoever is named in the copyright or copyrights 
-  for the package. 
+	for the package. 
 
 "You" is you, if you're thinking about copying or distributing this Package. 
 
 "Reasonable copying fee" is whatever you can justify on the basis of 
-  media cost, duplication charges, time of people involved, and so on. 
-  (You will not be required to justify it to the Copyright Holder, but 
-  only to the computing community at large as a market that must bear 
-  the fee.) 
+	media cost, duplication charges, time of people involved, and so on. 
+	(You will not be required to justify it to the Copyright Holder, but 
+	only to the computing community at large as a market that must bear 
+	the fee.) 
 
 "Freely Available" means that no fee is charged for the item itself, 
-  though there may be fees involved in handling the item. It also means 
-  that recipients of the item may redistribute it under the same
-  conditions they received it. 
+	though there may be fees involved in handling the item. It also means 
+	that recipients of the item may redistribute it under the same
+	conditions they received it. 
 
 1. You may make and give away verbatim copies of the source form of the 
 Standard Version of this Package without restriction, provided that 
@@ -48,30 +56,30 @@ that you insert a prominent notice in each changed file stating how and
 when you changed that file, and provided that you do at least ONE of the 
 following: 
 
-  a. place your modifications in the Public Domain or otherwise make them 
-     Freely Available, such as by posting said modifications to Usenet 
-     or an equivalent medium, or placing the modifications on a major 
-     archive site such as uunet.uu.net, or by allowing the Copyright Holder 
-     to include your modifications in the Standard Version of the Package. 
-  b. use the modified Package only within your corporation or organization. 
-  c. rename any non-standard executables so the names do not conflict 
-     with standard executables, which must also be provided, and provide 
-     a separate manual page for each non-standard executable that clearly 
-     documents how it differs from the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	place your modifications in the Public Domain or otherwise make them 
+	Freely Available, such as by posting said modifications to Usenet 
+	or an equivalent medium, or placing the modifications on a major 
+	archive site such as uunet.uu.net, or by allowing the Copyright Holder 
+	to include your modifications in the Standard Version of the Package. 
+b.	use the modified Package only within your corporation or organization. 
+c.	rename any non-standard executables so the names do not conflict 
+	with standard executables, which must also be provided, and provide 
+	a separate manual page for each non-standard executable that clearly 
+	documents how it differs from the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 4. You may distribute the programs of this Package in object code or 
 executable form, provided that you do at least ONE of the following: 
 
-  a. distribute a Standard Version of the executables and library files, 
-     together with instructions (in the manual page or equivalent) on 
-     where to get the Standard Version. 
-  b. accompany the distribution with the machine-readable source of the 
-     Package with your modifications. 
-  c. give non-standard executables non-standard names, and clearly 
-     document the differences in manual pages (or equivalent), together 
-     with instructions on where to get the Standard Version. 
-  d. make other distribution arrangements with the Copyright Holder. 
+a.	distribute a Standard Version of the executables and library files, 
+	together with instructions (in the manual page or equivalent) on 
+	where to get the Standard Version. 
+b.	accompany the distribution with the machine-readable source of the 
+	Package with your modifications. 
+c.	give non-standard executables non-standard names, and clearly 
+	document the differences in manual pages (or equivalent), together 
+	with instructions on where to get the Standard Version. 
+d.	make other distribution arrangements with the Copyright Holder. 
 
 5. You may charge a reasonable copying fee for any distribution of 
 this Package. You may charge any fee you choose for support of 
@@ -118,4 +126,70 @@ WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE. 
 
 The End 
+*/
 
+// File version: 2006-02-17
+
+/*
+ * saxBIOMLhandler.h contains the override methods necessary for compatibility with
+ * BIOML file formats.
+ */
+#if !defined(SAXBIOMLHANDLER_H)
+#define SAXBIOMLHANDLER_H
+
+#include "saxhandler.h"
+#include <set>
+/**
+* Uses eXpat SAX parser to parse Bioml data to obtain protein information.
+*/
+class SAXBiomlHandler : public SAXHandler
+{
+public:
+	SAXBiomlHandler();
+	~SAXBiomlHandler();
+
+	// -----------------------------------------------------------------------
+	//  Overrides of SAXHandler functions
+	// -----------------------------------------------------------------------
+	/**
+	* Receive notification of the start of an element.
+	*
+	* <p>By default, do nothing.  Application writers may override this
+	* method in a subclass to take specific actions at the start of
+	* each element (such as allocating a new tree node or writing
+	* output to a file).</p>
+	*/
+	void startElement(const XML_Char *el, const XML_Char **attr);
+
+	/**
+	* Receive notification of the end of an element.
+	*
+	* <p>By default, do nothing.  Application writers may override this
+	* method in a subclass to take specific actions at the end of
+	* each element (such as finalising a tree node or writing
+	* output to a file).</p>
+	*/
+	void endElement(const XML_Char *el);
+
+	/**
+	* Receive notification of character data inside an element.
+	*
+	* <p>By default, do nothing.  Application writers may override this
+	* method to take specific actions for each chunk of character data
+	* (such as adding the data to a node or buffer, or printing it to
+	* a file).</p>
+	*/
+	void characters(const XML_Char *s, int len);
+
+	vector<msequence> m_vseqBest; // a vector of msequences used in the model refinement process
+	set<size_t> m_setSeq;
+	set<string> m_setPaths;
+	vector<string> m_vstrPaths;
+private:
+	// Flags indicating parser is inside a particular tag.
+	bool m_bProtein;
+	bool m_bPeptide;
+	msequence m_seqCurrent;
+};
+
+#endif              //SAXBIOMLHANDLER_H
